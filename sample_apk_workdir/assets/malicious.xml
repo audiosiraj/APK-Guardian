@@ -1,0 +1,5 @@
+<malicious>
+  <cmd>runtime.exec("su -c payload")</cmd>
+  <note>attempt to inject hook and bypass</note>
+  <target>facebook.com</target>
+</malicious>

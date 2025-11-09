@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APK Security Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>APK Security Analyzer</h1>
+            <p>Upload an APK file to check for suspicious activity and malware</p>
+        </header>
+        
+        <main>
+            <form action="/analyze" method="post" enctype="multipart/form-data">
+                <div class="upload-area">
+                    <input type="file" name="apk_file" id="apk_file" accept=".apk" required>
+                    <label for="apk_file" class="file-label">Choose APK File</label>
+                </div>
+                <button type="submit" class="analyze-btn">Analyze APK</button>
+            </form>
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <div class="flash-error">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            <div class="info-section">
+                <h2>What We Analyze</h2>
+                <ul>
+                    <li>Permissions requested by the app</li>
+                    <li>File hashes (MD5, SHA1, SHA256)</li>
+                    <li>Suspicious patterns and behaviors</li>
+                    <li>VirusTotal integration (if configured)</li>
+                    <li>APK metadata and structure</li>
+                </ul>
+                
+                <div class="warning-box">
+                    <strong>⚠️ Important:</strong> This tool provides preliminary analysis. 
+                    Always download apps from official stores and use comprehensive antivirus solutions.
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Powered by Advanced APK Analysis Technology</p>
+        </footer>
+    </div>
+</body>
+</html>

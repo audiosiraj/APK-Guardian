@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - APK Security Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>APK Analysis Results</h1>
+            <p>File: {{ filename }}</p>
+        </header>
+        
+        <main>
+            {% if not results and job_id %}
+            <div class="result-section">
+                <h3>Live Analysis</h3>
+                <pre id="live-log" style="height:220px; overflow:auto; background:#f8f9fa; padding:12px; border-radius:5px;"></pre>
+            </div>
+            <script>
+            (function () {
+                const logEl = document.getElementById('live-log');
+                const es = new EventSource("/stream/{{ job_id }}");
+                es.onmessage = function (e) {
+                    logEl.textContent += e.data + "\n";
+                    logEl.scrollTop = logEl.scrollHeight;
+                };
+                es.addEventListener("complete", function () {
+                    es.close();
+                    window.location.href = "/view_result/{{ job_id }}";
+                });
+            })();
+            </script>
+            {% endif %}
+            {% if results %}
+            <!-- Summary Section -->
+            <div class="result-summary">
+                <div class="alert alert-{{ results.threat_level }}">
+                    <h2>
+                        {% if results.threat_level == 'high' %}🚨 HIGH RISK DETECTED
+                        {% elif results.threat_level == 'medium' %}⚠️ MEDIUM RISK DETECTED
+                        {% else %}✅ LOW RISK DETECTED{% endif %}
+                    </h2>
+                    <p>Threat Level: <strong class="threat-{{ results.threat_level }}">{{ results.threat_level|upper }}</strong></p>
+                    <p>Risk Score: {{ results.risk_score }}/100</p>
+                </div>
+            </div>
+            
+            <!-- Basic Information -->
+            <div class="result-section">
+                <h3>Basic Information</h3>
+                <div class="info-grid">
+                    <div><strong>Package Name:</strong> {{ results.basic_info.package_name }}</div>
+                    <div><strong>Version:</strong> {{ results.basic_info.version }}</div>
+                    <div><strong>SDK Versions:</strong> {{ results.basic_info.sdk_versions }}</div>
+                    <div><strong>File Type:</strong> {{ results.file_type }}</div>
+                    <div><strong>File Size:</strong> {{ results.file_size|filesizeformat }}</div>
+                </div>
+            </div>
+            
+            <!-- Hash Information -->
+            <div class="result-section">
+                <h3>File Hashes</h3>
+                <div class="info-grid">
+                    <div><strong>MD5:</strong> <code>{{ results.hashes.md5 }}</code></div>
+                    <div><strong>SHA1:</strong> <code>{{ results.hashes.sha1 }}</code></div>
+                    <div><strong>SHA256:</strong> <code>{{ results.hashes.sha256 }}</code></div>
+                </div>
+            </div>
+            
+            <!-- Permissions -->
+            {% if results.basic_info.permissions %}
+            <div class="result-section">
+                <h3>Permissions ({{ results.basic_info.permissions|length }})</h3>
+                <div class="permissions-grid">
+                    {% for perm in results.basic_info.permissions %}
+                    <span class="permission {% if perm in results.suspicious_permissions %}suspicious{% endif %} {% if perm in results.high_risk_permissions %}high-risk{% endif %}">
+                        {{ perm }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- High Risk Permissions -->
+            {% if results.high_risk_permissions %}
+            <div class="result-section">
+                <h3>🚨 High Risk Permissions</h3>
+                <ul>
+                    {% for perm in results.high_risk_permissions %}
+                    <li>{{ perm }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- Malicious Patterns -->
+            {% if results.malicious_patterns_found %}
+            <div class="result-section">
+                <h3>⚠️ Malicious Code Patterns Found</h3>
+                <ul>
+                    {% for pattern in results.malicious_patterns_found %}
+                    <li>{{ pattern }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- Warnings -->
+            {% if results.warnings %}
+            <div class="result-section">
+                <h3>⚠️ Warnings</h3>
+                <ul>
+                    {% for warning in results.warnings %}
+                    <li>{{ warning }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- Recommendations -->
+            {% if results.recommendations %}
+            <div class="result-section">
+                <h3>Recommendations</h3>
+                <div class="recommendations">
+                    {% for rec in results.recommendations %}
+                    <p>{{ rec }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- VirusTotal Results -->
+            <div class="result-section">
+                <h3>VirusTotal Check</h3>
+                <p>{{ results.virustotal.message }}</p>
+                {% if results.virustotal.detected %}
+                <div class="warning-item">
+                    <strong>Malware detected by VirusTotal!</strong>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% endif %}
+            <div class="actions">
+                <a href="/" class="btn">Analyze Another APK</a>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Note: This analysis is for educational purposes. Always use comprehensive security solutions.</p>
+        </footer>
+    </div>
+</body>
+</html>
